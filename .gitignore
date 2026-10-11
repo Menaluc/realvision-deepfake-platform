@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Model checkpoints are copied in by hand, never committed
+backend/models/*
+
+
+# Local sample videos (used only by the regression/parity test)
+samples/
+
+# Video files anywhere; test videos are generated in temp directories
+*.mp4
+*.mov
+*.avi
+*.webm
+*.mkv
+
+# Node / frontend
+node_modules/
+frontend/dist/
+coverage/
+
+# Environment and editor files
+.env
+.env.*
+.DS_Store
+Thumbs.db
