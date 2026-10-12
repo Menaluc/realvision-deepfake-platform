@@ -1,0 +1,267 @@
+/* Result section */
+#resultHero {
+    animation: fadeIn 0.35s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.video-box {
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(20, 30, 60, 0.12);
+    background: #000;
+}
+
+.video-box video {
+    display: block;
+    width: 100%;
+    max-height: 420px;
+}
+
+.eyebrow {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+}
+
+.verdict-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.verdict-badge svg {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.verdict-badge.real {
+    background: var(--green-bg);
+    color: var(--green);
+}
+
+.verdict-badge.fake {
+    background: var(--red-bg);
+    color: var(--red);
+}
+
+.confidence-line {
+    margin-top: 16px;
+    font-size: 15px;
+}
+
+.confidence-line b {
+    font-weight: 800;
+}
+
+.divider {
+    border: none;
+    border-top: 1px solid rgba(16, 24, 40, 0.08);
+    margin: 20px 0;
+}
+
+.meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.meta-item svg {
+    width: 17px;
+    height: 17px;
+    color: var(--muted);
+    flex-shrink: 0;
+}
+
+.meta-item .meta-label {
+    font-size: 11.5px;
+    color: var(--muted);
+}
+
+.meta-item .meta-value {
+    font-size: 13.5px;
+    font-weight: 600;
+    word-break: break-all;
+}
+
+
+/* Sampled frames */
+.frames-card {
+    margin-top: 32px;
+    animation: fadeIn 0.35s ease;
+}
+
+.frames-hint {
+    margin: -6px 0 18px;
+    font-size: 13.5px;
+    color: var(--muted);
+}
+
+.frames-grid {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 12px;
+}
+
+@media (max-width: 860px) {
+    .frames-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+.frame {
+    margin: 0;
+}
+
+.frame img,
+.frame-placeholder {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    background: rgba(16, 24, 40, 0.06);
+}
+
+.frame img {
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(20, 30, 60, 0.08);
+}
+
+.frame figcaption {
+    margin-top: 6px;
+    font-size: 11.5px;
+    color: var(--muted);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.frame-placeholder {
+    animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.frames-error {
+    color: var(--red);
+    font-size: 13.5px;
+}
+
+/* Frames open the viewer on click */
+.frame-button {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border-radius: 10px;
+    background: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.frame-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(20, 30, 60, 0.18);
+}
+
+.frame-button:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+}
+
+/* Frame viewer */
+.viewer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(16, 24, 40, 0.55);
+    animation: fadeIn 0.2s ease;
+}
+
+.viewer {
+    width: 100%;
+    max-width: 480px;
+    max-height: 100%;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.viewer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.viewer-header .eyebrow {
+    margin-bottom: 0;
+}
+
+.viewer-close {
+    width: auto;
+    margin: 0;
+    padding: 6px;
+    background: transparent;
+    color: var(--navy);
+}
+
+.viewer-close svg {
+    width: 20px;
+    height: 20px;
+}
+
+.viewer-image {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(16, 24, 40, 0.06);
+}
+
+.viewer-image img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.viewer-heatmap {
+    opacity: 0.75;
+}
+
+.viewer-caption {
+    margin: 14px 0 0;
+    font-size: 13.5px;
+    color: var(--muted);
+    text-align: center;
+}
