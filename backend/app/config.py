@@ -21,6 +21,8 @@ class Settings:
     max_upload_bytes: int = 20 * 1024 * 1024
     # Where uploads are written while they are checked; None = system temp
     temp_dir: Path | None = None
+    # The built frontend (npm run build), served at "/" when it exists
+    frontend_dist: Path = BACKEND_DIR.parent / "frontend" / "dist"
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -44,4 +46,5 @@ class Settings:
             ),
             max_upload_bytes=read("MAX_UPLOAD_BYTES", defaults.max_upload_bytes, int),
             temp_dir=read("TEMP_DIR", defaults.temp_dir, Path),
+            frontend_dist=read("FRONTEND_DIST", defaults.frontend_dist, Path),
         )

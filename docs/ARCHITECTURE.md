@@ -1,6 +1,6 @@
 # RealVision Architecture
 
-**Status:** Approved, 2026-10-06. Implemented stage by stage (see §7).
+**Status:** Approved, 2026-10-06. All stages implemented (see §7).
 
 RealVision is a platform around an existing, trained deepfake detection model. The work is on the backend and the platform, not on improving the model: the model's predictions must not change. The ML modules are treated as a behavioral baseline (see §5).
 
@@ -210,7 +210,7 @@ Frames and heatmaps are served from the analysis cache:
 
 ## 7. Implementation order
 
-Each stage ends with its tests green. Stages 1–9 are completed; stage 10 is planned.
+Each stage ends with its tests green. All stages are completed.
 
 1. **Repo bootstrap.** *(Completed.)* `backend/` with uv on Python 3.11, `pyproject.toml`, pytest + ruff running on an empty suite. `frontend/` in place and building.
 2. **ML core.** *(Completed.)* Add the four baseline ML and storage modules and their tests, unchanged; the tests pass.
@@ -221,7 +221,7 @@ Each stage ends with its tests green. Stages 1–9 are completed; stage 10 is pl
 7. **Frame endpoints.** *(Completed.)* Frames list, JPEG and attention PNG: 404s, typed parameters, heatmaps computed once, 503 for attention in degraded mode.
 8. **Integration and regression/parity validation.** *(Completed.)* Real checkpoint and real decode. Predictions on local sample videos are compared, within a tolerance, against a recorded behavioral baseline: the expected probabilities are generated locally once and stored as test fixtures. The sample videos stay local, so the test is skipped when they are missing. The baseline is recorded from V1's own inference code by `backend/scripts/record_baseline.py`; V2 matched it exactly (difference 0) on 6 FaceForensics++ clips.
 9. **Frontend.** *(Completed.)* The paths in §2, the error format, `id`, `/api/model` with a 503 fallback, size check, Vite proxy, updated Vitest mocks.
-10. **Production serving and README.** FastAPI mounts `frontend/dist` if it exists; manual smoke test in both ready and degraded states; run instructions.
+10. **Production serving and README.** *(Completed.)* FastAPI mounts `frontend/dist` if it exists; manual smoke test in both ready and degraded states; run instructions.
 
 ## 8. Resolved decisions
 
@@ -229,7 +229,7 @@ Each stage ends with its tests green. Stages 1–9 are completed; stage 10 is pl
 2. **Startup without a checkpoint:** the app starts **degraded**. Health returns 503 `{ status: "degraded", modelLoaded: false }`; endpoints that need the model return 503 `MODEL_UNAVAILABLE`.
 3. **`POST /api/analyses` response:** 201, no `Location` header, field `id`.
 4. **Validation policy:** declared `video/*` + decord decode + frame count > 0. No separate magic-byte library and no container allowlist; the UI hint keeps saying "MP4, MOV".
-5. **`/api/model` fields:** the six fields in §2, all derived at runtime. Training metrics will be documented in the README, because the code has no source for them.
+5. **`/api/model` fields:** the six fields in §2, all derived at runtime. The code has no source for training metrics, and none were available, so the README says accuracy is not documented.
 6. **Frames:** a separate endpoint, not part of the analysis response.
 
 ## 9. Defaults that can still change

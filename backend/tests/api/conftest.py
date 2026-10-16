@@ -16,7 +16,12 @@ def upload_dir(tmp_path):
 
 @pytest.fixture
 def missing_checkpoint_settings(tmp_path, upload_dir):
-    return Settings(checkpoint_path=tmp_path / "missing.pt", temp_dir=upload_dir)
+    return Settings(
+        checkpoint_path=tmp_path / "missing.pt",
+        temp_dir=upload_dir,
+        # API tests don't depend on whether a local frontend build exists
+        frontend_dist=tmp_path / "no-frontend-build",
+    )
 
 
 @pytest.fixture

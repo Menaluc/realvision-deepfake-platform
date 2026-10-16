@@ -6,6 +6,7 @@ There is no module-level app, so importing this module never loads the model.
 import logging
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from app.api.error_handlers import register_error_handlers
 from app.api.routes import analyses, health, model
@@ -27,6 +28,26 @@ def load_predictor(settings: Settings) -> Predictor | None:
 
     logger.info("Model loaded from %s on %s", settings.checkpoint_path, settings.device)
     return predictor
+
+
+def mount_frontend(app: FastAPI, settings: Settings) -> None:
+    """Serves the built frontend at "/", so one process serves the whole app.
+
+    Mounted after the API routers: routes are matched in order, so /api/*
+    still reaches the API, and an unknown /api path falls through to the
+    static files, whose 404 the error handlers turn into NOT_FOUND. There is
+    no client-side routing, so unknown pages are a plain 404, not index.html.
+    """
+    if not (settings.frontend_dist / "index.html").is_file():
+        # Normal in development, where Vite serves the frontend
+        logger.info(
+            "No frontend build at %s; serving the API only", settings.frontend_dist
+        )
+        return
+
+    app.mount(
+        "/", StaticFiles(directory=settings.frontend_dist, html=True), name="frontend"
+    )
 
 
 def create_app(settings: Settings | None = None, predictor=None) -> FastAPI:
@@ -55,5 +76,8 @@ def create_app(settings: Settings | None = None, predictor=None) -> FastAPI:
     app.include_router(health.router)
     app.include_router(model.router)
     app.include_router(analyses.router)
+
+    # Last: it matches every path the routers above did not
+    mount_frontend(app, settings)
 
     return app

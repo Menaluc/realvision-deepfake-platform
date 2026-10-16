@@ -34,12 +34,14 @@ def test_settings_are_read_from_the_environment(tmp_path, monkeypatch):
     monkeypatch.setenv("REALVISION_CHECKPOINT_PATH", str(tmp_path / "model.pt"))
     monkeypatch.setenv("REALVISION_DEVICE", "cuda")
     monkeypatch.setenv("REALVISION_CACHE_MAX_ENTRIES", "5")
+    monkeypatch.setenv("REALVISION_FRONTEND_DIST", str(tmp_path / "dist"))
 
     settings = Settings.from_env()
 
     assert settings.checkpoint_path == tmp_path / "model.pt"
     assert settings.device == "cuda"
     assert settings.cache_max_entries == 5
+    assert settings.frontend_dist == tmp_path / "dist"
     # Unset variables keep their defaults
     assert settings.cache_ttl_seconds == Settings().cache_ttl_seconds
 
