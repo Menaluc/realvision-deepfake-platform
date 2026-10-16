@@ -64,11 +64,12 @@ def test_validated_upload_can_still_be_deleted(tmp_path, video_file):
     assert list(upload_dir.iterdir()) == []
 
 
-def test_importing_validation_before_torch_works():
+@pytest.mark.parametrize("module", ["app.services.validation", "app.ml.preprocess"])
+def test_modules_using_decord_can_be_imported_before_torch(module):
     # Regression: decord loaded before torch breaks torch on Windows
     # (WinError 1114). A fresh process, so no earlier import hides it.
     result = subprocess.run(
-        [sys.executable, "-c", "import app.services.validation; import torch"],
+        [sys.executable, "-c", f"import {module}; import torch"],
         cwd=BACKEND_DIR,
         capture_output=True,
         text=True,

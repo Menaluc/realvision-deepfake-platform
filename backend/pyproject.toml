@@ -31,11 +31,3 @@ pythonpath = ["."]
 
 [tool.ruff]
 target-version = "py311"
-# Behavioral-baseline modules, kept unchanged until regression/parity
-# validation passes (Stage 8). Technical debt: lint and format them after that.
-extend-exclude = [
-    "app/ml/model_arch.py",
-    "app/ml/preprocess.py",
-    "app/ml/gradcam.py",
-    "app/storage/analysis_cache.py",
-]

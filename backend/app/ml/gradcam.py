@@ -46,10 +46,7 @@ def compute_gradcam(model, video_tensor, target_class):
 
     # Upsample 7x7 → frame size
     cam = F.interpolate(
-        cam,
-        size=video_tensor.shape[-2:],
-        mode="bilinear",
-        align_corners=False
+        cam, size=video_tensor.shape[-2:], mode="bilinear", align_corners=False
     )[:, 0]
 
     # Joint normalization across all frames
