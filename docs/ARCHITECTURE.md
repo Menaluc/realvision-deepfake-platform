@@ -18,7 +18,7 @@ RealVision is a platform around an existing, trained deepfake detection model. T
 - Frontend: React + TypeScript + Vite.
 - Backend: FastAPI only, on Python 3.11, managed with `uv` and `pyproject.toml`.
 - The ML pipeline is fixed: 16-frame uniform sampling, preprocessing, model architecture, inference behavior and Grad-CAM. They change only if a compatibility issue forces it, and any change needs regression/parity validation.
-- The upload limit is 20 MB.
+- The upload limit is 20 MB, counted as 20 × 1024 × 1024 bytes on both the backend and the frontend.
 - Grad-CAM is computed lazily.
 - The in-memory analysis cache is used for the MVP only.
 - Frames are fetched from their own endpoint, not returned inside the analysis response.
@@ -211,13 +211,13 @@ Frames and heatmaps are served from the analysis cache:
 
 ## 7. Implementation order
 
-Each stage ends with its tests green. Stages 1–4 are completed; stages 5–10 are planned.
+Each stage ends with its tests green. Stages 1–5 are completed; stages 6–10 are planned.
 
 1. **Repo bootstrap.** *(Completed.)* `backend/` with uv on Python 3.11, `pyproject.toml`, pytest + ruff running on an empty suite. `frontend/` in place and building.
 2. **ML core.** *(Completed.)* Add the four baseline ML and storage modules and their tests, unchanged; the tests pass.
 3. **Predictor.** *(Completed.)* Loading (success and failure), lock, `predict`, `explain` and model info. Unit tests use random weights; a real-checkpoint test is skipped if the file is missing.
 4. **App foundation.** *(Completed.)* Config, `create_app`, ready and degraded startup, error format and handlers (400 for request-shape errors, 503 `MODEL_UNAVAILABLE`, generic 500), `GET /api/health` in both states, `GET /api/model`.
-5. **Upload and validation services.** Size cap, type check, decode and frame-count checks, temp-file cleanup. Tested with tiny synthetic videos generated in fixtures.
+5. **Upload and validation services.** *(Completed.)* Size cap, type check, decode and frame-count checks, temp-file cleanup. Tested with tiny synthetic videos generated in fixtures.
 6. **`POST /api/analyses`.** API tests with the fake predictor cover 201, every error and degraded mode.
 7. **Frame endpoints.** Frames list, JPEG and attention PNG: 404s, typed parameters, heatmaps computed once, 503 for attention in degraded mode.
 8. **Integration and regression/parity validation.** Real checkpoint and real decode. Predictions on local sample videos are compared, within a tolerance, against a recorded behavioral baseline: the expected probabilities are generated locally once and stored as test fixtures. The sample videos stay local, so the test is skipped when they are missing.
