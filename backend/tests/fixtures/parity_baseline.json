@@ -1,0 +1,69 @@
+{
+  "recorded_with": {
+    "code": "v1_reference/inference.py",
+    "torch": "2.14.0+cpu",
+    "device": "cpu"
+  },
+  "samples": [
+    {
+      "path": "fake/007_001.mp4",
+      "sha256": "85033a0aa59a02593c17bcab8b6b6f02a7099b73a0d7c071e2fe5a8497783e59",
+      "true_label": "fake",
+      "label": "real",
+      "probabilities": {
+        "real": 0.9640934467315674,
+        "fake": 0.0359065867960453
+      }
+    },
+    {
+      "path": "fake/009_027.mp4",
+      "sha256": "9f5034ab44618265a92a048241638dc104eb4ed579205621d909e604d998a63f",
+      "true_label": "fake",
+      "label": "fake",
+      "probabilities": {
+        "real": 0.4994813799858093,
+        "fake": 0.5005186796188354
+      }
+    },
+    {
+      "path": "fake/017_803.mp4",
+      "sha256": "29b67148e908f7fba7b23f0eec36bc94c5b866a8fd3c17983a5537b31d3aadf0",
+      "true_label": "fake",
+      "label": "fake",
+      "probabilities": {
+        "real": 0.2758554220199585,
+        "fake": 0.7241445779800415
+      }
+    },
+    {
+      "path": "real/017.mp4",
+      "sha256": "4ba97594f42702ac69a14dd5295a79d6105a8bba4b06e16f3f627e8fbb44df8b",
+      "true_label": "real",
+      "label": "fake",
+      "probabilities": {
+        "real": 0.2190413922071457,
+        "fake": 0.7809586524963379
+      }
+    },
+    {
+      "path": "real/021.mp4",
+      "sha256": "da47a889ec4fa854e013cd0457156a9e5537ebe5c2b66021a8848ce297edc28a",
+      "true_label": "real",
+      "label": "fake",
+      "probabilities": {
+        "real": 0.3927533030509949,
+        "fake": 0.6072466969490051
+      }
+    },
+    {
+      "path": "real/056.mp4",
+      "sha256": "2acacfc1a115b9054e3e8b97fa28ab93174a64e9728a7e347d8ad379c3bf47d0",
+      "true_label": "real",
+      "label": "real",
+      "probabilities": {
+        "real": 0.5673070549964905,
+        "fake": 0.4326929450035095
+      }
+    }
+  ]
+}
