@@ -8,7 +8,8 @@ import logging
 from fastapi import FastAPI
 
 from app.api.error_handlers import register_error_handlers
-from app.api.routes import health, model
+from app.api.routes import analyses, health, model
+from app.api.upload_limit import UploadLimitMiddleware
 from app.config import Settings
 from app.ml.predictor import ModelLoadError, Predictor
 from app.storage.analysis_cache import AnalysisCache
@@ -47,8 +48,10 @@ def create_app(settings: Settings | None = None, predictor=None) -> FastAPI:
     )
 
     register_error_handlers(app)
+    app.add_middleware(UploadLimitMiddleware)
 
     app.include_router(health.router)
     app.include_router(model.router)
+    app.include_router(analyses.router)
 
     return app

@@ -3,32 +3,31 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.main import create_app
-from app.ml.predictor import CLASSES, ModelInfo
-
-
-class FakePredictor:
-    """Stands in for Predictor, so API tests don't need the checkpoint."""
-
-    def info(self) -> ModelInfo:
-        return ModelInfo(
-            backbone="fake_backbone",
-            sampled_frames=16,
-            input_size=224,
-            feature_size=1280,
-            embedding_size=256,
-            classes=CLASSES,
-        )
+from tests.fakes import FakePredictor
 
 
 @pytest.fixture
-def missing_checkpoint_settings(tmp_path):
-    return Settings(checkpoint_path=tmp_path / "missing.pt")
+def upload_dir(tmp_path):
+    # Uploads go here, so tests can check that no temp file is left behind
+    path = tmp_path / "uploads"
+    path.mkdir()
+    return path
 
 
 @pytest.fixture
-def ready_app(missing_checkpoint_settings):
+def missing_checkpoint_settings(tmp_path, upload_dir):
+    return Settings(checkpoint_path=tmp_path / "missing.pt", temp_dir=upload_dir)
+
+
+@pytest.fixture
+def fake_predictor():
+    return FakePredictor()
+
+
+@pytest.fixture
+def ready_app(missing_checkpoint_settings, fake_predictor):
     # The fake predictor wins: the missing checkpoint is never read
-    return create_app(missing_checkpoint_settings, predictor=FakePredictor())
+    return create_app(missing_checkpoint_settings, predictor=fake_predictor)
 
 
 @pytest.fixture

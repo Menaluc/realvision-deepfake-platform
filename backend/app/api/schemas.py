@@ -24,6 +24,18 @@ class ModelResponse(CamelModel):
     classes: list[str]
 
 
+class Probabilities(CamelModel):
+    real: float
+    fake: float
+
+
+class AnalysisResponse(CamelModel):
+    id: str
+    prediction: Literal["real", "fake"]
+    confidence: float
+    probabilities: Probabilities
+
+
 class ErrorDetail(CamelModel):
     code: str
     message: str
