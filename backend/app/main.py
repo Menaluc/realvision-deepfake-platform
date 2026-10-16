@@ -42,6 +42,8 @@ def create_app(settings: Settings | None = None, predictor=None) -> FastAPI:
     app.state.settings = settings
     # None means degraded: routes that need the model answer 503
     app.state.predictor = predictor
+    # Created in degraded mode too, so the frame routes still work; they
+    # answer 404 because nothing can be added to it without the model
     app.state.cache = AnalysisCache(
         max_entries=settings.cache_max_entries,
         ttl_seconds=settings.cache_ttl_seconds,

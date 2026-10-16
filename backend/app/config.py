@@ -4,6 +4,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+# backend/, so the default checkpoint path works from any working directory
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 
 ENV_PREFIX = "REALVISION_"
@@ -25,6 +26,9 @@ class Settings:
     def from_env(cls) -> "Settings":
         defaults = cls()
 
+        # An unset variable keeps its default. A value that can't be parsed
+        # raises, so a misconfigured deploy fails at startup instead of
+        # running with a setting nobody chose.
         def read(name, default, parse):
             value = os.environ.get(ENV_PREFIX + name)
             return default if value is None else parse(value)

@@ -6,6 +6,9 @@ error handlers in app.api turn them into the error format.
 
 
 class AppError(Exception):
+    # Each subclass sets these three. Keeping the HTTP status here puts every
+    # error's code, status and message in one place, at the cost of the
+    # domain layer knowing about HTTP status numbers.
     status_code = 500
     code = "INTERNAL_ERROR"
     message = "An unexpected error occurred."
@@ -25,6 +28,7 @@ class ModelUnavailable(AppError):
 class VideoTooLarge(AppError):
     status_code = 413
     code = "VIDEO_TOO_LARGE"
+    # Matches the default Settings.max_upload_bytes
     message = "The video is larger than the 20 MB limit."
 
 
@@ -32,6 +36,18 @@ class UnsupportedMediaType(AppError):
     status_code = 415
     code = "UNSUPPORTED_MEDIA_TYPE"
     message = "The file is not a video."
+
+
+class AnalysisNotFound(AppError):
+    status_code = 404
+    code = "ANALYSIS_NOT_FOUND"
+    message = "The analysis does not exist or has expired."
+
+
+class FrameNotFound(AppError):
+    status_code = 404
+    code = "FRAME_NOT_FOUND"
+    message = "The analysis has no frame with this index."
 
 
 class UnreadableVideo(AppError):

@@ -55,6 +55,8 @@ def saved_upload(
     opened again (by decord) while it is open for writing. It is deleted
     when the block exits, whether it succeeds or raises.
     """
+    # mkstemp, not NamedTemporaryFile: it gives a plain descriptor that is
+    # closed below, with no delete-on-close behavior that differs per OS
     handle, name = tempfile.mkstemp(suffix=safe_suffix(filename), dir=temp_dir)
     path = Path(name)
 
@@ -62,6 +64,8 @@ def saved_upload(
         with os.fdopen(handle, "wb") as target:
             copy_with_limit(source, target, max_bytes)
 
+        # The yield is inside the try, so the finally also runs when the
+        # caller's with-block raises
         yield path
 
     finally:
@@ -74,6 +78,7 @@ def copy_with_limit(source: BinaryIO, target: BinaryIO, max_bytes: int) -> None:
     while chunk := source.read(CHUNK_SIZE):
         written += len(chunk)
 
+        # Checked before writing, so no more than max_bytes ever reach disk
         if written > max_bytes:
             raise VideoTooLarge()
 

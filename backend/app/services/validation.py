@@ -19,7 +19,11 @@ def check_declared_type(content_type: str | None) -> None:
 def check_readable_video(path) -> None:
     """Opens the file the way preprocess_video does and checks it has frames."""
     try:
+        # The reader is never stored, so it is released (and its file handle
+        # closed) right away; on Windows the upload couldn't be deleted otherwise
         frame_count = len(VideoReader(str(path), ctx=cpu(0)))
+    # DECORDError for broken containers, a plain RuntimeError when the file
+    # isn't a video at all
     except (DECORDError, RuntimeError) as error:
         # The decord message includes the server path, so it is not passed on
         raise UnreadableVideo() from error

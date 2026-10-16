@@ -36,7 +36,8 @@ async def handle_app_error(request: Request, error: AppError) -> JSONResponse:
 async def handle_validation_error(
     request: Request, error: RequestValidationError
 ) -> JSONResponse:
-    # 400 instead of FastAPI's default 422, which is kept for UNREADABLE_VIDEO
+    # 400 instead of FastAPI's default 422, which is kept for UNREADABLE_VIDEO.
+    # Only the first problem is reported, so the message stays one sentence.
     first = error.errors()[0]
     location = ".".join(str(part) for part in first["loc"])
     return error_response(400, "INVALID_REQUEST", f"{location}: {first['msg']}")
@@ -61,5 +62,9 @@ async def handle_unexpected_error(request: Request, error: Exception) -> JSONRes
 def register_error_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AppError, handle_app_error)
     app.add_exception_handler(RequestValidationError, handle_validation_error)
+    # Starlette's HTTPException, not FastAPI's subclass: the router raises the
+    # Starlette one for unknown paths (404) and wrong methods (405)
     app.add_exception_handler(HTTPException, handle_http_error)
+    # Starlette runs this one outside the other middleware, as the last resort
+    # for anything not caught above
     app.add_exception_handler(Exception, handle_unexpected_error)
