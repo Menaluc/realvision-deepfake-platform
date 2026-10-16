@@ -17,7 +17,7 @@ class Settings:
     device: str = "cpu"
     cache_max_entries: int = 20
     cache_ttl_seconds: float = 30 * 60
-    # 20 MB, counted as MiB; the frontend checks the same number
+    # 20 MB, counted as MiB; frontend/src/constants/upload.ts checks the same number
     max_upload_bytes: int = 20 * 1024 * 1024
     # Where uploads are written while they are checked; None = system temp
     temp_dir: Path | None = None

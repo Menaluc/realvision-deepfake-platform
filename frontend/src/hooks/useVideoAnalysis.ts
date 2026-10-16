@@ -1,6 +1,7 @@
 import { useReducer } from "react";
 import { getFrames } from "../api/analysis";
 import { predictVideo } from "../api/predict";
+import { MAX_UPLOAD_BYTES, VIDEO_TOO_LARGE_MESSAGE } from "../constants/upload";
 import type { PredictionResult } from "../types/prediction";
 import { readDuration } from "../utils/video";
 import { analysisReducer, initialAnalysisState } from "./analysisReducer";
@@ -24,6 +25,12 @@ export function useVideoAnalysis() {
             return;
         }
 
+        // Rejected before uploading; the server would answer 413 anyway
+        if (file.size > MAX_UPLOAD_BYTES) {
+            dispatch({ type: "analysisFailed", error: VIDEO_TOO_LARGE_MESSAGE });
+            return;
+        }
+
         dispatch({ type: "analysisStarted" });
 
         let prediction: PredictionResult;
@@ -39,7 +46,7 @@ export function useVideoAnalysis() {
             return;
         }
 
-        await loadFrames(prediction.analysisId);
+        await loadFrames(prediction.id);
     }
 
     async function loadFrames(analysisId: string) {

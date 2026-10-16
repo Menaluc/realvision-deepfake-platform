@@ -182,16 +182,15 @@ Frames and heatmaps are served from the analysis cache:
 
 **Dependencies.** The ML dependency versions are pinned exactly (`==`) in `pyproject.toml`, so predictions can't drift with a library update.
 
-**Frontend.** The components (all except Dropzone), views, styles, `hooks/analysisReducer.ts`, `utils/`, `public/`, `index.html` and the component tests stay as they are. Stage 9 changes:
+**Frontend.** Stage 9 connected the client to this contract, keeping the existing components, views and styles:
 
-- `api/client.ts`: check the status before parsing, and read `error.message`.
-- `api/predict.ts` and `api/analysis.ts`: the paths in §2; `analysisId` becomes `id`.
-- `types/`: rename the fields to match.
-- `hooks/useVideoAnalysis.ts`: the field rename only; the separate frames call stays.
-- `constants/model.ts`: replaced by `/api/model`, with a 503 fallback.
-- `Dropzone.tsx`: size check before upload.
+- `api/client.ts`: checks the status before parsing, reads `error.message`, and falls back when an error body isn't JSON.
+- `api/predict.ts` and `api/analysis.ts`: the paths in §2; `analysisId` became `id` in `types/prediction.ts`.
+- `hooks/analysisReducer.ts`: a one-line change for the `id` rename.
+- `hooks/useVideoAnalysis.ts`: the rename, and the 20 MB check before upload (it already owns errors, so it reuses `analysisFailed`; the limit is in `constants/upload.ts`).
+- `constants/model.ts`: removed. `hooks/useModelInfo.ts` reads `/api/model` once; on a 503 the pipeline view says the model details are unavailable.
 - `vite.config.ts`: proxy to `:8000`.
-- Hook and App tests: new mocked responses.
+- Tests: new mocked responses, plus tests for the client, the size check, model info and a degraded server.
 
 ## 6. Main decisions and trade-offs
 
@@ -211,7 +210,7 @@ Frames and heatmaps are served from the analysis cache:
 
 ## 7. Implementation order
 
-Each stage ends with its tests green. Stages 1–8 are completed; stages 9–10 are planned.
+Each stage ends with its tests green. Stages 1–9 are completed; stage 10 is planned.
 
 1. **Repo bootstrap.** *(Completed.)* `backend/` with uv on Python 3.11, `pyproject.toml`, pytest + ruff running on an empty suite. `frontend/` in place and building.
 2. **ML core.** *(Completed.)* Add the four baseline ML and storage modules and their tests, unchanged; the tests pass.
@@ -221,7 +220,7 @@ Each stage ends with its tests green. Stages 1–8 are completed; stages 9–10 
 6. **`POST /api/analyses`.** *(Completed.)* API tests with the fake predictor cover 201, every error and degraded mode.
 7. **Frame endpoints.** *(Completed.)* Frames list, JPEG and attention PNG: 404s, typed parameters, heatmaps computed once, 503 for attention in degraded mode.
 8. **Integration and regression/parity validation.** *(Completed.)* Real checkpoint and real decode. Predictions on local sample videos are compared, within a tolerance, against a recorded behavioral baseline: the expected probabilities are generated locally once and stored as test fixtures. The sample videos stay local, so the test is skipped when they are missing. The baseline is recorded from V1's own inference code by `backend/scripts/record_baseline.py`; V2 matched it exactly (difference 0) on 6 FaceForensics++ clips.
-9. **Frontend.** The paths in §2, the error format, `id`, `/api/model` with a 503 fallback, size check, Vite proxy, updated Vitest mocks.
+9. **Frontend.** *(Completed.)* The paths in §2, the error format, `id`, `/api/model` with a 503 fallback, size check, Vite proxy, updated Vitest mocks.
 10. **Production serving and README.** FastAPI mounts `frontend/dist` if it exists; manual smoke test in both ready and degraded states; run instructions.
 
 ## 8. Resolved decisions

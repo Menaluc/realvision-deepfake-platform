@@ -3,15 +3,22 @@ import { describe, expect, it, vi } from "vitest";
 import { FrameStrip } from "./FrameStrip";
 
 describe("FrameStrip", () => {
-    it("shows placeholders while the frames load", () => {
-        render(<FrameStrip frames={{ status: "loading" }} onSelectFrame={vi.fn()} />);
+    it("shows one placeholder per sampled frame while the frames load", () => {
+        render(<FrameStrip frames={{ status: "loading" }} sampledFrames={16} onSelectFrame={vi.fn()} />);
 
         expect(screen.getAllByTestId("frame-placeholder")).toHaveLength(16);
         expect(screen.queryByRole("img")).not.toBeInTheDocument();
     });
 
+    it("shows a loading message when the frame count is unknown", () => {
+        render(<FrameStrip frames={{ status: "loading" }} sampledFrames={null} onSelectFrame={vi.fn()} />);
+
+        expect(screen.getByText("Loading frames…")).toBeInTheDocument();
+        expect(screen.queryByTestId("frame-placeholder")).not.toBeInTheDocument();
+    });
+
     it("shows the error when the frames could not be loaded", () => {
-        render(<FrameStrip frames={{ status: "error", error: "Analysis not found" }} onSelectFrame={vi.fn()} />);
+        render(<FrameStrip frames={{ status: "error", error: "Analysis not found" }} sampledFrames={16} onSelectFrame={vi.fn()} />);
 
         expect(screen.getByText("Analysis not found")).toBeInTheDocument();
     });
@@ -26,7 +33,7 @@ describe("FrameStrip", () => {
             heatmapUrl: `/frames/${index}/attention`
         }));
 
-        render(<FrameStrip frames={{ status: "loaded", frames }} onSelectFrame={onSelectFrame} />);
+        render(<FrameStrip frames={{ status: "loaded", frames }} sampledFrames={16} onSelectFrame={onSelectFrame} />);
         fireEvent.click(screen.getByAltText("Frame 2"));
 
         expect(onSelectFrame).toHaveBeenCalledWith(1);

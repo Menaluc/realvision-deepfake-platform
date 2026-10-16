@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { MODEL } from "../constants/model";
 import type { Analysis, SampledFrame } from "../types/analysis";
+import type { ModelInfoState } from "../types/model";
 import { formatPercent, formatTimestamp } from "../utils/format";
 import "../styles/pipeline.css";
 
@@ -49,9 +49,22 @@ function VideoStep({ duration, frames }: { duration: number | null; frames: Samp
     return <PipelineStep title="Video" value="—" detail="The uploaded clip" />;
 }
 
+// Shown in the model steps when /api/model didn't answer
+const MODEL_UNAVAILABLE = "Model details unavailable";
+
+interface PipelineCardProps {
+    analysis: Analysis;
+    modelInfo: ModelInfoState;
+}
+
 // How the model reached its decision, step by step, with this analysis's values
-export function PipelineCard({ analysis }: { analysis: Analysis }) {
+export function PipelineCard({ analysis, modelInfo }: PipelineCardProps) {
     const { video, prediction, frames } = analysis;
+    const model = modelInfo.status === "loaded" ? modelInfo.info : null;
+    // While /api/model is in flight the steps show a dash; after a failure, why
+    const missing = modelInfo.status === "unavailable" ? MODEL_UNAVAILABLE : "—";
+    // The frames themselves say how many were sampled, even without model details
+    const sampledFrames = model?.sampledFrames ?? loadedFramesCount(frames);
     const loadedFrames = frames.status === "loaded" ? frames.frames : null;
     const firstTimestamp = loadedFrames?.at(0)?.timestamp ?? null;
     const lastTimestamp = loadedFrames?.at(-1)?.timestamp ?? null;
@@ -66,7 +79,7 @@ export function PipelineCard({ analysis }: { analysis: Analysis }) {
 
                 <PipelineStep
                     title="Sampled frames"
-                    value={`${MODEL.sampledFrames} frames`}
+                    value={sampledFrames !== null ? `${sampledFrames} frames` : "—"}
                     detail={loadedFrames
                         ? `Evenly spaced, ${formatTimestamp(firstTimestamp)} to ${formatTimestamp(lastTimestamp)}`
                         : "Evenly spaced across the video"}
@@ -84,19 +97,25 @@ export function PipelineCard({ analysis }: { analysis: Analysis }) {
 
                 <PipelineStep
                     title="CNN"
-                    value={MODEL.backbone}
-                    detail={`Each ${MODEL.inputSize}×${MODEL.inputSize} frame → ${number(MODEL.featureSize)} features`}
+                    value={model ? model.backbone : missing}
+                    detail={model
+                        ? `Each ${model.inputSize}×${model.inputSize} frame → ${number(model.featureSize)} features`
+                        : "Features for each frame"}
                 />
 
                 <PipelineStep
                     title="Average"
-                    value={`${MODEL.sampledFrames} × ${number(MODEL.featureSize)} → ${number(MODEL.featureSize)}`}
+                    value={model
+                        ? `${model.sampledFrames} × ${number(model.featureSize)} → ${number(model.featureSize)}`
+                        : missing}
                     detail="One feature vector for the whole video"
                 />
 
                 <PipelineStep
                     title="Classifier"
-                    value={`${number(MODEL.featureSize)} → ${MODEL.embeddingSize} → ${MODEL.classes}`}
+                    value={model
+                        ? `${number(model.featureSize)} → ${model.embeddingSize} → ${model.classes.length}`
+                        : missing}
                     detail="Two scores: real and fake"
                 />
 
@@ -117,4 +136,8 @@ export function PipelineCard({ analysis }: { analysis: Analysis }) {
             </ol>
         </section>
     );
+}
+
+function loadedFramesCount(frames: Analysis["frames"]): number | null {
+    return frames.status === "loaded" ? frames.frames.length : null;
 }

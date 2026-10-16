@@ -1,13 +1,14 @@
-import { MODEL } from "../constants/model";
 import type { FramesState } from "../types/analysis";
 import { formatTimestamp } from "../utils/format";
 
 interface FrameStripProps {
     frames: FramesState;
+    // From /api/model; null when unknown, then no placeholders are drawn
+    sampledFrames: number | null;
     onSelectFrame: (index: number) => void;
 }
 
-export function FrameStrip({ frames, onSelectFrame }: FrameStripProps) {
+export function FrameStrip({ frames, sampledFrames, onSelectFrame }: FrameStripProps) {
     return (
         <section className="card frames-card">
             <div className="eyebrow">Sampled Frames</div>
@@ -15,10 +16,12 @@ export function FrameStrip({ frames, onSelectFrame }: FrameStripProps) {
 
             {frames.status === "error" ? (
                 <div className="frames-error">{frames.error}</div>
+            ) : frames.status === "loading" && sampledFrames === null ? (
+                <div className="frames-loading">Loading frames…</div>
             ) : (
                 <div className="frames-grid">
                     {frames.status === "loading"
-                        ? Array.from({ length: MODEL.sampledFrames }, (_, i) => (
+                        ? Array.from({ length: sampledFrames ?? 0 }, (_, i) => (
                             <div key={i} className="frame-placeholder" data-testid="frame-placeholder" />
                         ))
                         : frames.frames.map((frame) => (
