@@ -6,16 +6,19 @@ requires-python = ">=3.11,<3.12"
 # ML versions are pinned exactly so predictions can't drift with a library update.
 dependencies = [
     "decord==0.6.0",
+    "fastapi>=0.143.2",
     "numpy==2.4.6",
     "opencv-python-headless==5.0.0.93",
     "pillow==12.3.0",
     "timm==1.0.29",
     "torch==2.14.0",
     "torchvision==0.29.0",
+    "uvicorn>=0.54.0",
 ]
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.1",
     "pytest>=9.1.1",
     "ruff>=0.16.10",
 ]

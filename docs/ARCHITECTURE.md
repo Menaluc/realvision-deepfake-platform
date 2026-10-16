@@ -82,6 +82,7 @@ Every error response, except `/api/health`, uses:
 | 404 | `ANALYSIS_NOT_FOUND` | Unknown or expired id |
 | 404 | `FRAME_NOT_FOUND` | Index out of range |
 | 404 | `NOT_FOUND` | Unknown `/api/*` route |
+| 405 | `METHOD_NOT_ALLOWED` | Known path, unsupported method (keeps the `Allow` header) |
 | 503 | `MODEL_UNAVAILABLE` | `POST /api/analyses`, `.../attention` or `GET /api/model` while the model isn't loaded |
 | 500 | `INTERNAL_ERROR` | Anything unexpected. The message is always generic; details are logged on the server only |
 
@@ -210,12 +211,12 @@ Frames and heatmaps are served from the analysis cache:
 
 ## 7. Implementation order
 
-Each stage ends with its tests green. Stages 1–3 are completed; stages 4–10 are planned.
+Each stage ends with its tests green. Stages 1–4 are completed; stages 5–10 are planned.
 
 1. **Repo bootstrap.** *(Completed.)* `backend/` with uv on Python 3.11, `pyproject.toml`, pytest + ruff running on an empty suite. `frontend/` in place and building.
 2. **ML core.** *(Completed.)* Add the four baseline ML and storage modules and their tests, unchanged; the tests pass.
 3. **Predictor.** *(Completed.)* Loading (success and failure), lock, `predict`, `explain` and model info. Unit tests use random weights; a real-checkpoint test is skipped if the file is missing.
-4. **App foundation.** Config, `create_app`, ready and degraded startup, error format and handlers (400 for request-shape errors, 503 `MODEL_UNAVAILABLE`, generic 500), `GET /api/health` in both states, `GET /api/model`.
+4. **App foundation.** *(Completed.)* Config, `create_app`, ready and degraded startup, error format and handlers (400 for request-shape errors, 503 `MODEL_UNAVAILABLE`, generic 500), `GET /api/health` in both states, `GET /api/model`.
 5. **Upload and validation services.** Size cap, type check, decode and frame-count checks, temp-file cleanup. Tested with tiny synthetic videos generated in fixtures.
 6. **`POST /api/analyses`.** API tests with the fake predictor cover 201, every error and degraded mode.
 7. **Frame endpoints.** Frames list, JPEG and attention PNG: 404s, typed parameters, heatmaps computed once, 503 for attention in degraded mode.
