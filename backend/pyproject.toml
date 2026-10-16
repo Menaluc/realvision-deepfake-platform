@@ -1,0 +1,37 @@
+[project]
+name = "realvision-backend"
+version = "0.1.0"
+description = "RealVision backend: FastAPI app for deepfake video detection"
+requires-python = ">=3.11,<3.12"
+# ML versions are pinned exactly so predictions can't drift with a library update.
+dependencies = [
+    "decord==0.6.0",
+    "numpy==2.4.6",
+    "opencv-python-headless==5.0.0.93",
+    "pillow==12.3.0",
+    "timm==1.0.29",
+    "torch==2.14.0",
+    "torchvision==0.29.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.10",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Lets tests import the `app` package from the backend root
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py311"
+# Behavioral-baseline modules, kept unchanged until regression/parity
+# validation passes (Stage 8). Technical debt: lint and format them after that.
+extend-exclude = [
+    "app/ml/model_arch.py",
+    "app/ml/preprocess.py",
+    "app/ml/gradcam.py",
+    "app/storage/analysis_cache.py",
+]
