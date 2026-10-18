@@ -6,17 +6,19 @@ import { PipelineCard } from "../components/PipelineCard";
 import { VerdictBadge } from "../components/VerdictBadge";
 import { VideoPreview } from "../components/VideoPreview";
 import type { Analysis } from "../types/analysis";
+import type { ModelInfoState } from "../types/model";
 import { formatPercent } from "../utils/format";
 import "../styles/result.css";
 
 interface ResultViewProps {
     analysis: Analysis;
+    modelInfo: ModelInfoState;
     onReset: () => void;
     onSelectFrame: (index: number) => void;
     onCloseFrame: () => void;
 }
 
-export function ResultView({ analysis, onReset, onSelectFrame, onCloseFrame }: ResultViewProps) {
+export function ResultView({ analysis, modelInfo, onReset, onSelectFrame, onCloseFrame }: ResultViewProps) {
     const { video, prediction, frames, selectedFrameIndex } = analysis;
     const selectedFrame = frames.status === "loaded" && selectedFrameIndex !== null
         ? frames.frames[selectedFrameIndex]
@@ -45,9 +47,13 @@ export function ResultView({ analysis, onReset, onSelectFrame, onCloseFrame }: R
                 </div>
             </div>
 
-            <FrameStrip frames={frames} onSelectFrame={onSelectFrame} />
+            <FrameStrip
+                frames={frames}
+                sampledFrames={modelInfo.status === "loaded" ? modelInfo.info.sampledFrames : null}
+                onSelectFrame={onSelectFrame}
+            />
 
-            <PipelineCard analysis={analysis} />
+            <PipelineCard analysis={analysis} modelInfo={modelInfo} />
 
             {selectedFrame && (
                 <FrameViewer

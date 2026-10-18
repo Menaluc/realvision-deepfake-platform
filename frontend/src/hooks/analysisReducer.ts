@@ -77,6 +77,6 @@ export function analysisReducer(state: AnalysisState, action: AnalysisAction): A
 
 // Ignores frames that arrive after a reset or for an older analysis
 function updateFrames(state: AnalysisState, analysisId: string, frames: FramesState): AnalysisState {
-    if (state.status !== "done" || state.analysis.prediction.analysisId !== analysisId) return state;
+    if (state.status !== "done" || state.analysis.prediction.id !== analysisId) return state;
     return { ...state, analysis: { ...state.analysis, frames } };
 }

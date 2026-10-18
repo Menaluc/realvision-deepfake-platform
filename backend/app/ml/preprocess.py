@@ -3,9 +3,11 @@ from dataclasses import dataclass
 
 import cv2
 import numpy as np
+
+# torch must be loaded before decord: on Windows, importing torch after
+# decord fails with "DLL initialization routine failed" (WinError 1114)
 import torch
 from decord import VideoReader, cpu
-
 
 IMG_SIZE = 224
 K_FRAMES = 16
@@ -19,11 +21,7 @@ def sample_frame_indices(num_frames_total, k=K_FRAMES, strategy="uniform"):
         return np.zeros((k,), dtype=np.int64)
 
     if strategy == "uniform":
-        indices = np.linspace(
-            0,
-            num_frames_total - 1,
-            k
-        ).round().astype(np.int64)
+        indices = np.linspace(0, num_frames_total - 1, k).round().astype(np.int64)
 
         return indices
 
@@ -34,11 +32,7 @@ def sample_frame_indices(num_frames_total, k=K_FRAMES, strategy="uniform"):
 
         indices = np.arange(num_frames_total, dtype=np.int64)
 
-        padding = np.full(
-            (k - num_frames_total,),
-            num_frames_total - 1,
-            dtype=np.int64
-        )
+        padding = np.full((k - num_frames_total,), num_frames_total - 1, dtype=np.int64)
 
         return np.concatenate([indices, padding])
 
@@ -56,21 +50,14 @@ def center_crop_resize(frames, out_size=IMG_SIZE):
         new_height = int(height * scale)
         new_width = int(width * scale)
 
-        frame = cv2.resize(
-            frame,
-            (new_width, new_height),
-            interpolation=cv2.INTER_AREA
-        )
+        frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
         height, width, _ = frame.shape
 
         y0 = (height - out_size) // 2
         x0 = (width - out_size) // 2
 
-        frame = frame[
-            y0:y0 + out_size,
-            x0:x0 + out_size
-        ]
+        frame = frame[y0 : y0 + out_size, x0 : x0 + out_size]
 
         output.append(frame)
 
@@ -91,12 +78,7 @@ class SampledVideo:
 def frames_to_tensor(frames):
     video_tensor = torch.from_numpy(frames).float() / 255.0
 
-    video_tensor = video_tensor.permute(
-        0,
-        3,
-        1,
-        2
-    )
+    video_tensor = video_tensor.permute(0, 3, 1, 2)
 
     mean = torch.tensor(MEAN).view(1, 3, 1, 1)
     std = torch.tensor(STD).view(1, 3, 1, 1)
@@ -105,29 +87,19 @@ def frames_to_tensor(frames):
 
 
 def preprocess_video(video_path):
-    video_reader = VideoReader(
-        video_path,
-        ctx=cpu(0)
-    )
+    video_reader = VideoReader(video_path, ctx=cpu(0))
 
     number_of_frames = len(video_reader)
 
-    indices = sample_frame_indices(
-        number_of_frames,
-        k=K_FRAMES,
-        strategy="uniform"
-    )
+    indices = sample_frame_indices(number_of_frames, k=K_FRAMES, strategy="uniform")
 
     frames = video_reader.get_batch(indices).asnumpy()
 
-    frames = center_crop_resize(
-        frames,
-        out_size=IMG_SIZE
-    )
+    frames = center_crop_resize(frames, out_size=IMG_SIZE)
 
     return SampledVideo(
         tensor=frames_to_tensor(frames),
         frames=frames,
         frame_numbers=indices.tolist(),
-        fps=float(video_reader.get_avg_fps())
+        fps=float(video_reader.get_avg_fps()),
     )

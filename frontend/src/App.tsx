@@ -1,10 +1,13 @@
 import { Header } from "./components/Header";
+import { useModelInfo } from "./hooks/useModelInfo";
 import { useVideoAnalysis } from "./hooks/useVideoAnalysis";
 import { ResultView } from "./views/ResultView";
 import { UploadView } from "./views/UploadView";
 
 export default function App() {
     const { state, selectFile, analyze, reset, selectFrame, closeFrame } = useVideoAnalysis();
+    // Loaded once at startup, before any analysis needs it
+    const modelInfo = useModelInfo();
 
     return (
         <>
@@ -13,6 +16,7 @@ export default function App() {
             {state.status === "done" ? (
                 <ResultView
                     analysis={state.analysis}
+                    modelInfo={modelInfo}
                     onReset={reset}
                     onSelectFrame={selectFrame}
                     onCloseFrame={closeFrame}

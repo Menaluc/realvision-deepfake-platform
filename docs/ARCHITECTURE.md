@@ -1,6 +1,6 @@
 # RealVision Architecture
 
-**Status:** Approved, 2026-10-06. Implemented stage by stage (see §7).
+**Status:** Approved, 2026-10-06. All stages implemented (see §7).
 
 RealVision is a platform around an existing, trained deepfake detection model. The work is on the backend and the platform, not on improving the model: the model's predictions must not change. The ML modules are treated as a behavioral baseline (see §5).
 
@@ -18,7 +18,7 @@ RealVision is a platform around an existing, trained deepfake detection model. T
 - Frontend: React + TypeScript + Vite.
 - Backend: FastAPI only, on Python 3.11, managed with `uv` and `pyproject.toml`.
 - The ML pipeline is fixed: 16-frame uniform sampling, preprocessing, model architecture, inference behavior and Grad-CAM. They change only if a compatibility issue forces it, and any change needs regression/parity validation.
-- The upload limit is 20 MB.
+- The upload limit is 20 MB, counted as 20 × 1024 × 1024 bytes on both the backend and the frontend.
 - Grad-CAM is computed lazily.
 - The in-memory analysis cache is used for the MVP only.
 - Frames are fetched from their own endpoint, not returned inside the analysis response.
@@ -82,6 +82,7 @@ Every error response, except `/api/health`, uses:
 | 404 | `ANALYSIS_NOT_FOUND` | Unknown or expired id |
 | 404 | `FRAME_NOT_FOUND` | Index out of range |
 | 404 | `NOT_FOUND` | Unknown `/api/*` route |
+| 405 | `METHOD_NOT_ALLOWED` | Known path, unsupported method (keeps the `Allow` header) |
 | 503 | `MODEL_UNAVAILABLE` | `POST /api/analyses`, `.../attention` or `GET /api/model` while the model isn't loaded |
 | 500 | `INTERNAL_ERROR` | Anything unexpected. The message is always generic; details are logged on the server only |
 
@@ -163,7 +164,7 @@ Frames and heatmaps are served from the analysis cache:
 
 ## 5. Behavioral baseline
 
-**Fixed modules.** `model_arch.py`, `preprocess.py`, `gradcam.py` and `analysis_cache.py`, with their unit tests, define the existing ML behavior. They are kept unchanged. Any change to them, to their pinned dependency versions, or to the prediction maths needs regression/parity validation (§7, stage 8).
+**Fixed modules.** `model_arch.py`, `preprocess.py`, `gradcam.py` and `analysis_cache.py`, with their unit tests, define the existing ML behavior. Their behavior is kept unchanged; since stage 8 they are linted and formatted like the rest of the code. Any change to them, to their pinned dependency versions, or to the prediction maths must keep `tests/integration/test_parity.py` green.
 
 **Prediction maths (fixed).**
 
@@ -181,16 +182,15 @@ Frames and heatmaps are served from the analysis cache:
 
 **Dependencies.** The ML dependency versions are pinned exactly (`==`) in `pyproject.toml`, so predictions can't drift with a library update.
 
-**Frontend.** The components (all except Dropzone), views, styles, `hooks/analysisReducer.ts`, `utils/`, `public/`, `index.html` and the component tests stay as they are. Stage 9 changes:
+**Frontend.** Stage 9 connected the client to this contract, keeping the existing components, views and styles:
 
-- `api/client.ts`: check the status before parsing, and read `error.message`.
-- `api/predict.ts` and `api/analysis.ts`: the paths in §2; `analysisId` becomes `id`.
-- `types/`: rename the fields to match.
-- `hooks/useVideoAnalysis.ts`: the field rename only; the separate frames call stays.
-- `constants/model.ts`: replaced by `/api/model`, with a 503 fallback.
-- `Dropzone.tsx`: size check before upload.
+- `api/client.ts`: checks the status before parsing, reads `error.message`, and falls back when an error body isn't JSON.
+- `api/predict.ts` and `api/analysis.ts`: the paths in §2; `analysisId` became `id` in `types/prediction.ts`.
+- `hooks/analysisReducer.ts`: a one-line change for the `id` rename.
+- `hooks/useVideoAnalysis.ts`: the rename, and the 20 MB check before upload (it already owns errors, so it reuses `analysisFailed`; the limit is in `constants/upload.ts`).
+- `constants/model.ts`: removed. `hooks/useModelInfo.ts` reads `/api/model` once; on a 503 the pipeline view says the model details are unavailable.
 - `vite.config.ts`: proxy to `:8000`.
-- Hook and App tests: new mocked responses.
+- Tests: new mocked responses, plus tests for the client, the size check, model info and a degraded server.
 
 ## 6. Main decisions and trade-offs
 
@@ -210,18 +210,18 @@ Frames and heatmaps are served from the analysis cache:
 
 ## 7. Implementation order
 
-Each stage ends with its tests green. Stages 1–3 are completed; stages 4–10 are planned.
+Each stage ends with its tests green. All stages are completed.
 
 1. **Repo bootstrap.** *(Completed.)* `backend/` with uv on Python 3.11, `pyproject.toml`, pytest + ruff running on an empty suite. `frontend/` in place and building.
 2. **ML core.** *(Completed.)* Add the four baseline ML and storage modules and their tests, unchanged; the tests pass.
 3. **Predictor.** *(Completed.)* Loading (success and failure), lock, `predict`, `explain` and model info. Unit tests use random weights; a real-checkpoint test is skipped if the file is missing.
-4. **App foundation.** Config, `create_app`, ready and degraded startup, error format and handlers (400 for request-shape errors, 503 `MODEL_UNAVAILABLE`, generic 500), `GET /api/health` in both states, `GET /api/model`.
-5. **Upload and validation services.** Size cap, type check, decode and frame-count checks, temp-file cleanup. Tested with tiny synthetic videos generated in fixtures.
-6. **`POST /api/analyses`.** API tests with the fake predictor cover 201, every error and degraded mode.
-7. **Frame endpoints.** Frames list, JPEG and attention PNG: 404s, typed parameters, heatmaps computed once, 503 for attention in degraded mode.
-8. **Integration and regression/parity validation.** Real checkpoint and real decode. Predictions on local sample videos are compared, within a tolerance, against a recorded behavioral baseline: the expected probabilities are generated locally once and stored as test fixtures. The sample videos stay local, so the test is skipped when they are missing.
-9. **Frontend.** The paths in §2, the error format, `id`, `/api/model` with a 503 fallback, size check, Vite proxy, updated Vitest mocks.
-10. **Production serving and README.** FastAPI mounts `frontend/dist` if it exists; manual smoke test in both ready and degraded states; run instructions.
+4. **App foundation.** *(Completed.)* Config, `create_app`, ready and degraded startup, error format and handlers (400 for request-shape errors, 503 `MODEL_UNAVAILABLE`, generic 500), `GET /api/health` in both states, `GET /api/model`.
+5. **Upload and validation services.** *(Completed.)* Size cap, type check, decode and frame-count checks, temp-file cleanup. Tested with tiny synthetic videos generated in fixtures.
+6. **`POST /api/analyses`.** *(Completed.)* API tests with the fake predictor cover 201, every error and degraded mode.
+7. **Frame endpoints.** *(Completed.)* Frames list, JPEG and attention PNG: 404s, typed parameters, heatmaps computed once, 503 for attention in degraded mode.
+8. **Integration and regression/parity validation.** *(Completed.)* Real checkpoint and real decode. Predictions on local sample videos are compared, within a tolerance, against a recorded behavioral baseline: the expected probabilities are generated locally once and stored as test fixtures. The sample videos stay local, so the test is skipped when they are missing. The baseline is recorded from V1's own inference code by `backend/scripts/record_baseline.py`; V2 matched it exactly (difference 0) on 6 FaceForensics++ clips.
+9. **Frontend.** *(Completed.)* The paths in §2, the error format, `id`, `/api/model` with a 503 fallback, size check, Vite proxy, updated Vitest mocks.
+10. **Production serving and README.** *(Completed.)* FastAPI mounts `frontend/dist` if it exists; manual smoke test in both ready and degraded states; run instructions.
 
 ## 8. Resolved decisions
 
@@ -229,7 +229,7 @@ Each stage ends with its tests green. Stages 1–3 are completed; stages 4–10 
 2. **Startup without a checkpoint:** the app starts **degraded**. Health returns 503 `{ status: "degraded", modelLoaded: false }`; endpoints that need the model return 503 `MODEL_UNAVAILABLE`.
 3. **`POST /api/analyses` response:** 201, no `Location` header, field `id`.
 4. **Validation policy:** declared `video/*` + decord decode + frame count > 0. No separate magic-byte library and no container allowlist; the UI hint keeps saying "MP4, MOV".
-5. **`/api/model` fields:** the six fields in §2, all derived at runtime. Training metrics will be documented in the README, because the code has no source for them.
+5. **`/api/model` fields:** the six fields in §2, all derived at runtime. The code has no source for training metrics, and none were available, so the README says accuracy is not documented.
 6. **Frames:** a separate endpoint, not part of the analysis response.
 
 ## 9. Defaults that can still change

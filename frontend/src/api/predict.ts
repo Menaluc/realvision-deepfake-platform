@@ -5,7 +5,7 @@ export function predictVideo(file: File): Promise<PredictionResult> {
     const formData = new FormData();
     formData.append("video", file);
 
-    return requestJson<PredictionResult>("/api/predict", {
+    return requestJson<PredictionResult>("/api/analyses", {
         method: "POST",
         body: formData
     }, "Analysis failed");

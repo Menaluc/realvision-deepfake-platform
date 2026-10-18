@@ -47,7 +47,7 @@ class AnalysisCache:
                 frame_numbers=frame_numbers,
                 fps=fps,
                 predicted_class=predicted_class,
-                created_at=self._clock()
+                created_at=self._clock(),
             )
 
             while len(self._entries) > self._max_entries:

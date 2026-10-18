@@ -1,5 +1,5 @@
-import torch.nn as nn
 import timm
+from torch import nn
 
 
 class VideoOnlyBaseline(nn.Module):
@@ -8,10 +8,7 @@ class VideoOnlyBaseline(nn.Module):
 
         # CNN feature extractor for each frame
         self.cnn = timm.create_model(
-            backbone,
-            pretrained=False,
-            num_classes=0,
-            global_pool=""
+            backbone, pretrained=False, num_classes=0, global_pool=""
         )
 
         # Number of features returned by the CNN

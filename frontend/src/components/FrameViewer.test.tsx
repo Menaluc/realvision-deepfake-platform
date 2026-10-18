@@ -7,8 +7,8 @@ const frame = {
     index: 4,
     frameNumber: 33,
     timestamp: 1.32,
-    imageUrl: "/api/analysis/abc/frames/4",
-    heatmapUrl: "/api/analysis/abc/frames/4/attention"
+    imageUrl: "/api/analyses/abc/frames/4",
+    heatmapUrl: "/api/analyses/abc/frames/4/attention"
 };
 
 function renderViewer(onClose = vi.fn()) {
