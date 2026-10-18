@@ -128,6 +128,40 @@ realvision-deepfake-platform/
 
 ## 4. Request flows
 
+### An analysis at a glance
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant B as Browser
+    participant A as FastAPI
+    participant M as Model
+    participant C as Cache
+
+    B->>A: GET /api/model
+    A-->>B: backbone, 16 frames, 224 px input
+    U->>B: drops a video, clicks Analyze
+    Note over B: files over 20 MB stop here
+    B->>A: POST /api/analyses (multipart field "video")
+    Note over A: size, type and decode checks (413 / 415 / 422)
+    A->>M: 16 frames, cropped to 224×224
+    Note over A: the temp file is deleted once the frames are in memory
+    M-->>A: real / fake probabilities
+    A->>C: keep the 16 frames
+    A-->>B: 201 { id, prediction, confidence, probabilities }
+    B->>A: GET /api/analyses/{id}/frames, then each frame
+    A->>C: read the frames
+    A-->>B: frame list, then 16 JPEGs
+    U->>B: opens a frame
+    B->>A: GET /api/analyses/{id}/frames/{index}/attention
+    A->>M: Grad-CAM for all 16 frames (first request only)
+    A->>C: keep the heatmaps
+    A-->>B: heatmap PNG
+```
+
+The verdict comes back before any frame or heatmap is requested, and Grad-CAM runs only if someone opens a frame.
+
 ### Startup
 
 1. `create_app` reads the settings and tries to load the checkpoint into a `Predictor`.
@@ -163,6 +197,20 @@ Frames and heatmaps are served from the analysis cache:
 - If it gets a 503, the pipeline view shows that model details are unavailable, and uploads show the server's `MODEL_UNAVAILABLE` message.
 
 ## 5. Behavioral baseline
+
+### Prediction pipeline
+
+```mermaid
+flowchart LR
+    video["Video"] --> sample["16 frames,<br/>evenly spaced"]
+    sample --> crop["Center crop 224×224,<br/>ImageNet normalization"]
+    crop --> cnn["EfficientNet-B0<br/>1280 features per frame"]
+    cnn --> avg["Average<br/>over the 16 frames"]
+    avg --> proj["Linear 1280 → 256"]
+    proj --> cls["Linear 256 → 2,<br/>softmax"]
+    cls --> out{{"real / fake<br/>+ confidence"}}
+    cnn -. "last 7×7 feature maps" .-> cam["Grad-CAM<br/>heatmap per frame"]
+```
 
 **Fixed modules.** `model_arch.py`, `preprocess.py`, `gradcam.py` and `analysis_cache.py`, with their unit tests, define the existing ML behavior. Their behavior is kept unchanged; since stage 8 they are linted and formatted like the rest of the code. Any change to them, to their pinned dependency versions, or to the prediction maths must keep `tests/integration/test_parity.py` green.
 

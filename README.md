@@ -6,6 +6,38 @@ EfficientNet-B0 processes 16 sampled frames, the frame representations are avera
 
 One FastAPI process serves both the API and the built React frontend. The detection model's behavior is fixed: a parity test shows the platform returns exactly the same probabilities as the original (V1) inference code.
 
+## How it works
+
+```mermaid
+flowchart LR
+    upload(["Browser<br/>user uploads a video"])
+
+    subgraph server["One FastAPI process"]
+        direction LR
+        checks{"Checks<br/>size · type<br/>decodable"}
+        sample["Sample 16 frames<br/>crop to 224×224"]
+        cnn["EfficientNet-B0<br/>on each frame<br/>→ average<br/>→ classifier"]
+        cache[("Cache<br/>frames, 30 min")]
+    end
+
+    verdict(["Browser<br/>real / fake<br/>+ confidence"])
+    error(["Browser<br/>error message"])
+    frames(["Browser<br/>frames and<br/>Grad-CAM heatmaps"])
+
+    upload --> checks
+    checks -- valid --> sample --> cnn --> verdict
+    checks -- "413 / 415 / 422" --> error
+    sample --> cache --> frames
+```
+
+1. The browser uploads the video (up to 20 MB).
+2. The server checks its size and type and that it can be decoded, then samples 16 frames.
+3. EfficientNet-B0 reads each frame, the 16 results are averaged, and a classifier gives the probabilities of `real` and `fake`.
+4. The verdict comes back at once (about 0.9 s on the development machine's CPU). The frames stay in memory for 30 minutes.
+5. The page then loads the frames; a Grad-CAM heatmap is computed the first time someone opens one.
+
+The request flow step by step, and the model's layers, are diagrammed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#4-request-flows).
+
 ## Tech stack
 
 - **Frontend:** React 19, TypeScript, Vite, Vitest
